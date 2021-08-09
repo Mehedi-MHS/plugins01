@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Trying to make data table</title>
+<meta name="viewport"content="width=device-width,initial-scale=1">
+</head>
+<body>
+<p>Trying to make a data table</p>
+<div id="data-table"></div>
+   
+
+
+<script type="text/javascript">
+
+//creating HTML AND CSS
+var main_dtable_parent=document.querySelector("#data-table");
+var htm=`<div id="dtblConfig"><p><strong>Entries:</strong>&nbsp; <select id="dtblSelect"onchange="sel(this)">
+               <option value="5">5</option>
+               <option value="10">10</option>
+               <option value="15">15</option>
+               <option value="25">25</option>
+            </select>
+   </p>
+ <p><strong>Search:</strong>&nbsp;<input type="search"id="dtblSearch"oninput="searching_data(this)"placeholder="&#128269; search here..."></p></div>
+<div id="tableContent"></div>
+<div id="status"></div>
+<br>
+<div id="pager"></div>`;
+
+main_dtable_parent.innerHTML=htm;
+
+var css=`*{
+  box-sizing:border-box;
+  font-family:none;
+}
+#data-table{
+width:90%;
+margin:0px auto;
+}
+div#dtblConfig{
+  display:-webkit-flex;
+  display:flex;
+  -webkit-justify-content:space-around;
+  justify-content:space-around;
+}
+input#dtblSearch{
+  padding-left:5px;
+  border-radius:3px;
+  border:1px solid grey;
+  outline:none;
+}
+input#dtblSearch:focus{
+  background:rgba(214,244,245,1);
+  border:1px solid darkcyan;
+  color:purple;
+}
+ table#dtbl{
+   width:100%;
+   border-collapse:collapse;
+   box-shadow:0px 0 10px rgba(1,41,112,0.3);
+ }
+ table#dtbl,td,th{
+    border:1px solid silver;
+    text-align:center;
+ }
+ tr:hover{
+   background:#80b3ff !important;
+   color:white;
+ }
+ th{
+   background:linear-gradient(to top,darkgreen,green,lightGreen);
+   color:white;
+   text-shadow:1px 1px 1px black;
+ }
+ th,td{
+   padding:7px 0 7px 0;
+ }
+ table#dtbl tr:nth-child(even){
+   background:silver;
+ }
+ 
+.pagerBtn{
+  float:left;
+  width:50px;
+  background:linear-gradient(to top,blue ,steelBlue ,skyBlue );
+  color:white;
+  border-radius:1px;
+  border:1px solid grey;
+}
+.activeBtn{
+  background:steelBlue;
+}
+#pager{
+  width:100%;
+  text-align:center;
+}
+@media screen and (min-width:600px){ /*for tablet*/
+  #data-table{
+     font-size:21px;
+  }
+ .pagerBtn{
+   width:65px;
+   height:25px;
+   font-size:19px;
+ }
+ select#dtblSelect{
+   font-size:19px;
+ }
+ input#dtblSearch{
+   font-size:19px;
+ }
+}
+@media screen and (min-width:992px){ /*for desktop*/
+  #data-table{
+     font-size:28px;
+  }
+ .pagerBtn{
+   width:73px;
+   height:32px;
+   font-size:25px;
+ }
+ select#dtblSelect{
+   font-size:25px;
+ }
+ input#dtblSearch{
+   font-size:25px;
+ }
+}`;
+
+var head_tag=(document.querySelector("head")?document.querySelector("head"):document.createElement("head"));
+var style_tag=(document.querySelector("style")?document.querySelector("style"):document.createElement("style"));
+style_tag.appendChild(document.createTextNode(css));
+head_tag.appendChild(style_tag);
+
+
+///javascripts
+"use strict";
+var tblTitle=[],keys=[],dataset_arr=[],searching=false,search_value="",last_clicked=[];
+var entryNo=document.querySelector("select").value; var current_page_no=0, current_page_lower_bound=current_page_no*entryNo,current_page_upper_bound=(current_page_no+1)*entryNo;
+window.addEventListener("load",function(){
+  updateTable();
+});
+
+function sel(updateEntryNo){
+  entryNo=updateEntryNo.value;
+  //current_page_upper_bound=updateEntryNo.value;
+  updateTable();
+}
+//handling pager button click and changing upper and lower bound values
+ function pagerClick(ev){
+   current_page_no=ev.getAttribute("pageNo");
+   last_clicked.length=0;
+   last_clicked.push(current_page_no);
+   updateTable();
+ }
+ //searching
+ function searching_data(d){
+    search_value=d.value;
+    updateTable();
+ }
+var tblParent=document.getElementById("tableContent");
+var pager=document.querySelector("#pager");
+//var tblTitle=["Name","Roll","Class"];
+var dataset=[{"name":"Abul babul","roll":1,"class":5},
+             {"name":"Atul batul","roll":2,"class":6},
+             {"name":"bbul Aabul","roll":3,"class":7},
+             {"name":"A babul","roll":4,"class":8},
+             {"name":"cl babul","roll":5,"class":9},
+             {"name":"mr bul","roll":6,"class":10},
+             {"name":"Abul hossain","roll":7,"class":1},
+             {"name":"Abubul","roll":8,"class":2},
+             {"name":"Kuddusl","roll":9,"class":3},
+             {"name":"Abul hhul","roll":10,"class":5},
+             {"name":"bhbul","roll":11,"class":4},
+             {"name":"ybul babul","roll":12,"class":5},
+             {"name":"wbul babul","roll":13,"class":7},
+             {"name":"xbul babul","roll":14,"class":8},
+             {"name":"zbul babul","roll":15,"class":3},
+             {"name":"Abul hhul","roll":16,"class":5},
+             {"name":"bhbul","roll":17,"class":4},
+             {"name":"ybul babul","roll":18,"class":5},
+             {"name":"wbul babul","roll":19,"class":7},
+             {"name":"xbul babul","roll":20,"class":8},
+             {"name":"ybul babul","roll":21,"class":5},
+             {"name":"wbul babul","roll":22,"class":7},
+             {"name":"xbul babul bangladesh is a beautiful","roll":23,"class":8},
+             {"name":"আবুল","roll":23,"class":8}];
+ var dataset_length=dataset.length;
+//getting keys and setting table title automatically
+  for ( var x in dataset[0]){
+      keys.push(x.toString());
+      tblTitle.push(x.toString().toUpperCase());
+  }
+////*****////
+ 
+ //making table
+ var table=document.createElement("table");
+ table.setAttribute("border","1");
+ table.setAttribute("id","dtbl");
+ 
+ 
+ 
+ //main function / functionality
+ function updateTable(){
+ 
+    // setting for search && dataset_arr
+     if(search_value.length>0){
+       dataset_arr.length=0; //clearing dataset_arr
+       for(var i=0;i<dataset_length;i++){
+          for(var j=0;j<keys.length;j++){
+             if(dataset[i][keys[j]].toString().toLowerCase().includes(search_value.toLowerCase())){
+                dataset_arr.push(dataset[i]);
+                }
+             }
+         }
+      }else{
+        ///copying dataset values to dataset_arr
+        dataset_arr.length=0;
+        for ( var i=0;i<dataset_length;i++){
+           dataset_arr.push(dataset[i]);
+        }
+      }
+   var dataset_arr_length=dataset_arr.length; //must place it insode updateTable() function
+  var total_page=Math.ceil(dataset_arr_length/entryNo);
+ //clearing old values in table
+   if(table.hasChildNodes("tr")){ //removing all childs of table after result number update.
+      var allTr=document.querySelectorAll("tr");
+      allTr.forEach(function(e){
+        table.removeChild(e);
+      }); 
+  }
+  //creating th//must place this after ↑ this removing operation
+  var tr=document.createElement("tr");
+  for (var i=0;i<tblTitle.length;i++){
+     var th=document.createElement("th");
+     th.appendChild(document.createTextNode(tblTitle[i]));
+     tr.appendChild(th);
+  }
+  table.appendChild(tr);
+  //////****end creating th
+  
+ 
+  //checking current_page_no and changing it according to need
+         
+         //(i):checking if current_page_upper_bound is greater than dataset_length or not and changing current_page_no
+         if(current_page_no*entryNo>dataset_arr_length){
+            current_page_no=total_page-1; //because page no started from 0.
+         }
+         
+  //calculating current page upper and lower button
+  var current_page_lower_bound=Number(current_page_no)*entryNo;
+  var current_page_upper_bound_calc=(Number(current_page_no)+1)*entryNo;
+  var current_page_upper_bound=(current_page_upper_bound_calc<=dataset_arr_length)?current_page_upper_bound_calc:(Number(current_page_lower_bound)+(dataset_arr_length-current_page_lower_bound));
+   for(var row=Number(current_page_lower_bound);row<Number(current_page_upper_bound);row++){
+      var tr2=document.createElement("tr");
+        
+   //creating table row and column automatically
+          for (var b=0;b<keys.length;b++){
+             try{
+              var td=document.createElement("td");
+              td.appendChild(document.createTextNode(dataset_arr[row][keys[b]]));
+              tr2.appendChild(td);
+              }catch(err){}
+          }
+        table.appendChild(tr2);
+   }
+ //end of main table
+   
+ tblParent.appendChild(table);
+//removing old pager button
+if(pager.hasChildNodes("button")){
+  document.querySelectorAll("button").forEach(function(b){
+     pager.removeChild(b);
+  });
+}
+//creating pager button
+for(var i=0;i<total_page;i++){
+   var btn=document.createElement("button");
+   btn.setAttribute("pageNo",i);
+   btn.setAttribute("onclick","pagerClick(this)");
+   if(last_clicked.length>0 && Number(last_clicked[0])===i){
+      btn.setAttribute("class","pagerBtn activeBtn");
+     }else{
+   btn.setAttribute("class","pagerBtn");
+   }
+   btn.appendChild(document.createTextNode(i+1));
+   pager.appendChild(btn);
+ }
+
+ 
+ 
+ //status text
+ var status=document.getElementById("status");
+ var status_text=`Showing ${Number(current_page_lower_bound)+1} to ${current_page_upper_bound} from ${dataset_arr_length} results`;
+ status.innerHTML=status_text;
+}
+
+
+
+
+//last modified 28 Jul 2021
+/*Next mission:
+  1:make color,background,font customization using setting icon
+  2: convert datatable to excel,pdf etc.
+*/
+
+</script>
+
+</body>
+</html>
