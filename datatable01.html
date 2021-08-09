@@ -15,10 +15,14 @@
 //creating HTML AND CSS
 var main_dtable_parent=document.querySelector("#data-table");
 var htm=`<div id="dtblConfig"><p><strong>Entries:</strong>&nbsp; <select id="dtblSelect"onchange="sel(this)">
-               <option value="5">5</option>
-               <option value="10">10</option>
-               <option value="15">15</option>
-               <option value="25">25</option>
+
+       <option value="5">5</option>
+       <option value="10">10</option>
+       <option value="20">20</option>
+       <option value="50">50</option>
+       <option value="100">100</option>
+       <option value="200">200</option>
+       <option value="500">500</option>
             </select>
    </p>
  <p><strong>Search:</strong>&nbsp;<input type="search"id="dtblSearch"oninput="searching_data(this)"placeholder="&#128269; search here..."></p></div>
